@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tipo {
+  IdTipo           Int                @id @default(autoincrement())
+  descrp           String
+  modeloHomologado ModeloHomologado[]
+}
+
+model Marca {
+  IdMarca          Int                @id @default(autoincrement())
+  descrp           String
+  modelo           Modelo[]
+  modeloHomologado ModeloHomologado[]
+}
+
+model Modelo {
+  IdModelo         Int                @id @default(autoincrement())
+  descrp           String
+  num_modelo       String
+  marca            Marca              @relation(fields: [IdMarca], references: [IdMarca])
+  IdMarca          Int
+  modeloHomologado ModeloHomologado[]
+}
+
+model ModeloHomologado {
+  IdModeloHomologado Int      @id @default(autoincrement())
+  tipo_cpu           String
+  modelo_cpu         String
+  ghz                String
+  hdd                String
+  tipo_hdd           String
+  ram                String
+  tipo               Tipo     @relation(fields: [IdTipo], references: [IdTipo])
+  IdTipo             Int
+  modelo             Modelo   @relation(fields: [IdModelo], references: [IdModelo])
+  IdModelo           Int
+  marca              Marca    @relation(fields: [IdMarca], references: [IdMarca])
+  IdMarca            Int
+  activo             Activo[]
+}
+
+model Proveedor {
+  IdProveedor Int      @id @default(autoincrement())
+  ruc         String   @unique
+  nombre      String
+  activo      Activo[]
+}
+
+model Estado {
+  IdEstado Int      @id @default(autoincrement())
+  descrp   String
+  activo   Activo[]
+}
+
+model Moneda {
+  IdMoneda Int      @id @default(autoincrement())
+  descrp   String
+  activo   Activo[]
+}
+
+model Activo {
+  IdActivo           Int              @id @default(autoincrement())
+  num_serial         String           @unique
+  IdModeloHomologado Int
+  modeloHomologado   ModeloHomologado @relation(fields: [IdModeloHomologado], references: [IdModeloHomologado])
+  fec_facturacion    DateTime
+  factura            String
+  IdEmpresa          Int
+  empresa            Empresa          @relation(fields: [IdEmpresa], references: [IdEmpresa])
+  valor_venta        Int
+  orden_compra       String
+  anotacion          String
+  IdEstado           Int
+  estado             Estado           @relation(fields: [IdEstado], references: [IdEstado])
+  IdMoneda           Int
+  moneda             Moneda           @relation(fields: [IdMoneda], references: [IdMoneda])
+  IdProveedor        Int
+  proveedor          Proveedor        @relation(fields: [IdProveedor], references: [IdProveedor])
+
+  recepcion  Recepcion[]
+  asignacion Asignacion[]
+}
+
+model Empresa {
+  IdEmpresa Int      @id @default(autoincrement())
+  descrp    String
+  local     Local[]
+  activo    Activo[]
+
+  empleado Empleado[]
+}
+
+model Local {
+  IdLocal   Int        @id @default(autoincrement())
+  descrp    String
+  empresa   Empresa    @relation(fields: [IdEmpresa], references: [IdEmpresa])
+  IdEmpresa Int
+  empleado  Empleado[]
+}
+
+model Empleado {
+  IdEmpleado      Int           @id @default(autoincrement())
+  tipoDocumento   TipoDocumento @relation(fields: [IdTipoDocumento], references: [IdTipoDocumento])
+  IdTipoDocumento Int
+  num_documento   String        @unique
+  nombre          String
+  nombreUsuario   String        @unique
+  empresa         Empresa       @relation(fields: [IdEmpresa], references: [IdEmpresa])
+  IdEmpresa       Int
+  local           Local         @relation(fields: [IdLocal], references: [IdLocal])
+  IdLocal         Int
+  asignacion      Asignacion[]
+
+  @@index([IdEmpresa, IdLocal], name: "empresaLocalIndex")
+}
+
+model Asignacion {
+  IdAsignacion      Int      @id @default(autoincrement())
+  gmd_cpu           String
+  hostname          String
+  sistema_operativo String
+  IdEmpleado        Int
+  empleado          Empleado @relation(fields: [IdEmpleado], references: [IdEmpleado])
+  area              Area     @relation(fields: [IdArea], references: [IdArea])
+  IdArea            Int
+  IdActivo          Int
+  activo            Activo   @relation(fields: [IdActivo], references: [IdActivo])
+}
+
+model Area {
+  IdArea     Int          @id @default(autoincrement())
+  descrp     String
+  asignacion Asignacion[]
+}
+
+model TipoDocumento {
+  IdTipoDocumento Int        @id @default(autoincrement())
+  descrp          String
+  empleado        Empleado[]
+}
+
+model Recepcion {
+  IdRecepcion Int    @id @default(autoincrement())
+  IdActivo    Int
+  activo      Activo @relation(fields: [IdActivo], references: [IdActivo])
+  IdMotivo    Int
+  motivo      Motivo @relation(fields: [IdMotivo], references: [IdMotivo])
+}
+
+model Motivo {
+  IdMotivo  Int         @id @default(autoincrement())
+  descrp    String
+  recepcion Recepcion[]
+}
+
+model Usuario {
+  IdUsuario Int    @id @default(autoincrement())
+  nombre    String
+  correo    String
+  IdRol     Int
+  rol       Rol    @relation(fields: [IdRol], references: [IdRol])
+}
+
+model Rol {
+  IdRol   Int       @id @default(autoincrement())
+  descrp  String
+  usuario Usuario[]
+}
