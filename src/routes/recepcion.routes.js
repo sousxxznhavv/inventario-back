@@ -1,35 +1,82 @@
-import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
+import { Router } from "express";
+import { upload } from "../helper/multer.js";
 
 const router = Router();
-const prisma =  new PrismaClient();
+const prisma = new PrismaClient();
 
-router.post("/recepcion", async(req,res)=>{
-try {
-    const {IdActivo, IdMotivo, IdEstado} = req.body
-    if(IdMotivo == 1) return res.json( await prisma.activo.update({
-        where:{
-            IdActivo: +IdActivo,
+router.post("/recepcion", upload.single("file"), async (req, res) => {
+  try {
+    const { IdActivo, IdMotivo, IdEstado } = req.body;
+    const { file } = req;
+
+    if (file && IdMotivo == 1) {
+      const extension = file.filename.split(".").at(1);
+      let guid = file.filename.split(".").at(0);
+
+      const recepcion = await prisma.recepcion.create({
+        data: {
+          IdActivo: +IdActivo,
+          IdMotivo: +IdMotivo,
         },
-        data:{
-            IdEstado: 5,
-        }
-    }))
-
-    if (IdMotivo == 2) return res.json( await prisma.activo.update({
-        where:{
-            IdActivo: +IdActivo,
+      });
+      await prisma.archivo.create({
+        data: {
+          guid: guid,
+          nombre: file.originalname,
+          extension: extension,
+          IdRecepcion: +recepcion.IdRecepcion,
         },
-        data:{
-            IdEstado: +IdEstado,
-        }
-    }))
+      });
 
+      await prisma.activo.update({
+        where: {
+          IdActivo: recepcion.IdActivo,
+        },
+        data: {
+          IdEstado: 5,
+        },
+      });
+      return res.json({ ok: true });
+    }
 
-
-} catch (error) {
-    console.log(error.message)
-}
-})
+    if (IdMotivo == 1) {
+      const recepcion = await prisma.recepcion.create({
+        data: {
+          IdActivo: +IdActivo,
+          IdMotivo: +IdMotivo,
+        },
+      });
+      await prisma.activo.update({
+        where: {
+          IdActivo: recepcion.IdActivo,
+        },
+        data: {
+          IdEstado: 5,
+        },
+      });
+      return res.json({ ok: true });
+    } else {
+      const recepcion = await prisma.recepcion.create({
+        data: {
+          IdActivo: +IdActivo,
+          IdMotivo: +IdMotivo,
+        },
+      });
+      await prisma.activo.update({
+        where: {
+          IdActivo: recepcion.IdActivo,
+        },
+        data: {
+          IdEstado: +IdEstado,
+        },
+      });
+      return res.json({ ok: true });
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.json({ error: error.message });
+  }
+});
 
 export default router;

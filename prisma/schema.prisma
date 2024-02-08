@@ -86,9 +86,8 @@ model Activo {
   moneda             Moneda           @relation(fields: [IdMoneda], references: [IdMoneda])
   IdProveedor        Int
   proveedor          Proveedor        @relation(fields: [IdProveedor], references: [IdProveedor])
-
-  recepcion  Recepcion[]
-  asignacion Asignacion[]
+  recepcion          Recepcion[]
+  asignacion         Asignacion[]
 }
 
 model Empresa {
@@ -150,11 +149,13 @@ model TipoDocumento {
 }
 
 model Recepcion {
-  IdRecepcion Int    @id @default(autoincrement())
-  IdActivo    Int
-  activo      Activo @relation(fields: [IdActivo], references: [IdActivo])
-  IdMotivo    Int
-  motivo      Motivo @relation(fields: [IdMotivo], references: [IdMotivo])
+  IdRecepcion   Int       @id @default(autoincrement())
+  IdActivo      Int
+  activo        Activo    @relation(fields: [IdActivo], references: [IdActivo])
+  IdMotivo      Int
+  motivo        Motivo    @relation(fields: [IdMotivo], references: [IdMotivo])
+  archivos      Archivo[]
+  fechaCreacion DateTime  @default(now())
 }
 
 model Motivo {
@@ -175,4 +176,15 @@ model Rol {
   IdRol   Int       @id @default(autoincrement())
   descrp  String
   usuario Usuario[]
+}
+
+model Archivo {
+  IdArchivo          Int       @id @default(autoincrement())
+  guid               String
+  nombre             String?
+  extension          String?
+  IdRecepcion        Int
+  recepcion          Recepcion @relation(fields: [IdArchivo], references: [IdRecepcion])
+  fechaCreacion      DateTime  @default(now())
+  fechaActualizacion DateTime  @default(now())
 }

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `recepcion` ADD COLUMN `fechaCreacion` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);
