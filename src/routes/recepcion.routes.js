@@ -37,7 +37,11 @@ router.post("/recepcion", upload.single("file"), async (req, res) => {
           IdEstado: 5,
         },
       });
-      return res.json({ ok: true });
+      return res.json({
+        ok: true,
+        msg: "Añadido con archivo",
+        recepcion: recepcion,
+      });
     }
 
     if (IdMotivo == 1) {
@@ -55,7 +59,7 @@ router.post("/recepcion", upload.single("file"), async (req, res) => {
           IdEstado: 5,
         },
       });
-      return res.json({ ok: true });
+      return res.json({ ok: true, msg: "Añadido sin archivo" });
     } else {
       const recepcion = await prisma.recepcion.create({
         data: {
@@ -63,6 +67,7 @@ router.post("/recepcion", upload.single("file"), async (req, res) => {
           IdMotivo: +IdMotivo,
         },
       });
+      console.log(recepcion);
       await prisma.activo.update({
         where: {
           IdActivo: recepcion.IdActivo,

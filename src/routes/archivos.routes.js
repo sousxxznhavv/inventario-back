@@ -1,12 +1,35 @@
 import { PrismaClient } from "@prisma/client";
 import { Router } from "express";
+import fs from "fs";
+import path from "path";
 
 const router = Router();
 const prisma = new PrismaClient();
 
-router.get("/file/show", async (req, res) => {
+router.get("/file/show/:uuid", async (req, res) => {
   try {
-    const nameFile = await prisma.archivo.findFirst({});
+    const { uuid } = req.params;
+
+    const nameFile = await prisma.archivo.findFirst({
+      where: {
+        guid: uuid,
+      },
+      select: {
+        nombre: true,
+        extension: true,
+      },
+    });
+
+    const filePath = path.resolve(`./uploads/${uuid}.${nameFile?.extension}`);
+
+    console.log(filePath);
+    if (!fs.existsSync(filePath)) {
+      throw new Error("Archivo no encontrado");
+    }
+    console.log(nameFile);
+    if (!nameFile) throw new Error("El archivo no exist");
+
+    res.sendFile(filePath);
   } catch (error) {
     console.log(error.message);
   }
@@ -23,22 +46,26 @@ router.get("/list/file/:idActivo", async (req, res) => {
       },
       select: {
         IdRecepcion: true,
-        archivos: {
-          select: {
-            extension: true,
-            guid: true,
-            nombre: true,
-          },
-          orderBy: {
-            fechaCreacion: "desc",
-          },
-        },
+      },
+    });
+
+    const archivos = await prisma.archivo.findMany({
+      where: {
+        IdRecepcion: result.IdRecepcion,
+      },
+      select: {
+        IdRecepcion: true,
+        nombre: true,
+        extension: true,
+        guid: true,
+        fechaCreacion: true,
       },
       orderBy: {
         fechaCreacion: "desc",
       },
+      take: 1,
     });
-    res.json(result);
+    res.json(archivos);
     /* const archivos = await prisma.archivo.findMany({
       where: {
         IdRecepcion: +idRecepcion,
